@@ -1,0 +1,27 @@
+//
+// Case/Pen Interface
+// (C) 2023 by LAPLJ. All rights reserved.
+//
+// Case = Estojo
+// Pen
+//
+
+//
+// Pen
+//
+
+interface Pen {
+	void set_color(in octet r, in octet g, in octet b);
+	void move_to(in short x, in short y);
+	void line_to(in short x, in short y);
+	oneway void aline_to(in short x, in short y);
+};
+
+//
+// PenCase = Pen factory
+//
+
+interface PenCase {
+	Pen new_pen();
+	Pen get_pen(in string name);
+};
