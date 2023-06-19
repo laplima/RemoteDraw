@@ -31,7 +31,8 @@
 *.out
 *.app
 
+CMakeLists.txt.user.*
 PenCaseC.*
 PenCaseS.*
 
-
+build*
