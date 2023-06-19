@@ -6,6 +6,7 @@
 #include <QFormLayout>
 #include <QRandomGenerator>
 #include <iostream>
+#include <algorithm>
 #include <fmt/core.h>
 
 using std::cout;
@@ -14,15 +15,15 @@ using std::flush;
 using fmt::print;
 using namespace colibry;
 
-std::map<QString,QColor> MainWindow::colormap = {
-    { "preto", Qt::black },
-    { "vermelho", Qt::red },
-    { "azul", Qt::blue },
-    { "verde", Qt::darkGreen },
+std::vector<std::pair<QString,QColor>> MainWindow::colormap = {
+    { "black", Qt::black },
+    { "red", Qt::red },
+    { "blue", Qt::blue },
+    { "green", Qt::darkGreen },
     { "magenta", Qt::magenta }
 };
 
-MainWindow::MainWindow(ORBManager& om, QWidget *parent)
+MainWindow::MainWindow(ORBManager& om, const QString& name, QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow), orb{om}
 {
     print("Seeting up UI...");
@@ -30,9 +31,11 @@ MainWindow::MainWindow(ORBManager& om, QWidget *parent)
 
     ui->setupUi(this);
 
+    ui->name->setText(name);
+
     for (const auto& [name,color] : colormap)
         ui->color_cb->addItem(name);
-    ui->color_cb->setCurrentIndex(2);
+//    ui->color_cb->setCurrentIndex(2);
     print("OK\n");
 
     // ORB init
@@ -83,17 +86,13 @@ UId MainWindow::new_user()
 void MainWindow::change_color()
 {
     auto color = ui->color_cb->currentText();
-    if (colormap.contains(color))
-        ui->canvas->set_color(mydid,colormap[color]);
+    auto p = std::find_if(begin(colormap), end(colormap), [&color](const std::pair<QString,QColor>& x) { return x.first == color; });
+    if (p != colormap.end())
+        ui->canvas->set_color(mydid,p->second);
 }
 
 void MainWindow::clear()
 {
-//    QPoint p;
-//    p.setX(QRandomGenerator::global()->bounded(780));
-//    p.setY(QRandomGenerator::global()->bounded(500));
-//    ui->canvas->line_to(mydid, p);
-
     ui->canvas->clear();
 }
 
@@ -106,7 +105,7 @@ void MainWindow::quit()
 
 void MainWindow::new_pen(Pen_i* p)
 {
-
+    // not needed...
 }
 
 void MainWindow::set_color(unsigned int uid, const QColor& c)

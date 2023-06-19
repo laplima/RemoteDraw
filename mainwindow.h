@@ -2,7 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <map>
+#include <vector>
 #include <memory>
 #include <colibry/ORBManager.h>
 #include "renderarea.h"
@@ -16,7 +16,7 @@ QT_END_NAMESPACE
 class MainWindow : public QMainWindow {
     Q_OBJECT
 public:
-    MainWindow(colibry::ORBManager& om, QWidget *parent = nullptr);
+    MainWindow(colibry::ORBManager& om, const QString& name, QWidget *parent = nullptr);
     ~MainWindow();
     UId new_user();
 public slots:
@@ -36,7 +36,7 @@ private:
     PortableServer::POA_var ppoa;
     PenCase_i* case_i;
     const UId mydid = 0;     // default drawing user id
-    static std::map<QString,QColor> colormap;
+    static std::vector<std::pair<QString,QColor>> colormap;
     size_t nusers = 0;      // connected users (i.e., pens)
 };
 
