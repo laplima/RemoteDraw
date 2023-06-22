@@ -6,7 +6,10 @@
 #include <QFormLayout>
 #include <QRandomGenerator>
 #include <iostream>
+#include <algorithm>
 #include <fmt/core.h>
+#include <fmt/ostream.h>
+#include <QFileDialog>
 
 using std::cout;
 using std::endl;
@@ -14,15 +17,15 @@ using std::flush;
 using fmt::print;
 using namespace colibry;
 
-std::map<QString,QColor> MainWindow::colormap = {
-    { "preto", Qt::black },
-    { "vermelho", Qt::red },
-    { "azul", Qt::blue },
-    { "verde", Qt::darkGreen },
+std::vector<std::pair<QString,QColor>> MainWindow::colormap = {
+    { "black", Qt::black },
+    { "red", Qt::red },
+    { "blue", Qt::blue },
+    { "green", Qt::darkGreen },
     { "magenta", Qt::magenta }
 };
 
-MainWindow::MainWindow(ORBManager& om, QWidget *parent)
+MainWindow::MainWindow(ORBManager& om, const QString& name, QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow), orb{om}
 {
     print("Seeting up UI...");
@@ -30,9 +33,11 @@ MainWindow::MainWindow(ORBManager& om, QWidget *parent)
 
     ui->setupUi(this);
 
+    ui->name->setText(name);
+
     for (const auto& [name,color] : colormap)
         ui->color_cb->addItem(name);
-    ui->color_cb->setCurrentIndex(2);
+//    ui->color_cb->setCurrentIndex(2);
     print("OK\n");
 
     // ORB init
@@ -41,10 +46,10 @@ MainWindow::MainWindow(ORBManager& om, QWidget *parent)
     orb.activate_rootpoa();
     ppoa = orb.create_child_poa("case", {POAPolicy::NO_IMPLICIT_ACTIVATION, POAPolicy::USER_ID});
     case_i = new PenCase_i{ppoa.in(), this};
-    auto cas = orb.activate_object<PenCase>(*case_i);
+    case_ref = orb.activate_object<PenCase>(*case_i);
 
     // publish
-    orb.save_ior("/tmp/case.ior", cas.in());
+    //    orb.save_ior("/tmp/case.ior", cas.in());
     print("OK\n");
 
     print("Starting orb thread...");
@@ -63,6 +68,7 @@ MainWindow::MainWindow(ORBManager& om, QWidget *parent)
     connect(ui->quit_bt, &QPushButton::clicked, this, &MainWindow::quit);
     connect(ui->clear_bt, &QPushButton::clicked, this, &MainWindow::clear);
     connect(ui->color_cb, &QComboBox::currentIndexChanged, this, &MainWindow::change_color);
+    connect(ui->exportior_bt, &QPushButton::clicked, this, &MainWindow::export_ior);
     connect(case_i, &PenCase_i::newpen, this, &MainWindow::new_pen);
     print("OK\n");
 }
@@ -83,19 +89,24 @@ UId MainWindow::new_user()
 void MainWindow::change_color()
 {
     auto color = ui->color_cb->currentText();
-    if (colormap.contains(color))
-        ui->canvas->set_color(mydid,colormap[color]);
+    auto p = std::find_if(begin(colormap), end(colormap), [&color](const std::pair<QString,QColor>& x) { return x.first == color; });
+    if (p != colormap.end())
+        ui->canvas->set_color(mydid,p->second);
 }
 
 void MainWindow::clear()
 {
-//    QPoint p;
-//    p.setX(QRandomGenerator::global()->bounded(780));
-//    p.setY(QRandomGenerator::global()->bounded(500));
-//    ui->canvas->line_to(mydid, p);
-
     ui->canvas->clear();
 }
+
+void MainWindow::export_ior()
+{
+    QString dir = "/tmp/" + ui->name->text() + ".ior";
+    auto filename = QFileDialog::getSaveFileName(this,tr("Save IOR File"),
+                                                 dir, tr("IOR (*.ior)"));
+    orb.save_ior(filename.toStdString(), case_ref.in());
+}
+
 
 void MainWindow::quit()
 {
@@ -106,7 +117,7 @@ void MainWindow::quit()
 
 void MainWindow::new_pen(Pen_i* p)
 {
-
+    // not needed...
 }
 
 void MainWindow::set_color(unsigned int uid, const QColor& c)
