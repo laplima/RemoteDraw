@@ -81,3 +81,8 @@ PenCase_i::~PenCase_i ()
 	}
 	return Pen::_duplicate(Pen::_narrow(ref));
 }
+
+void PenCase_i::put_back(Pen_ptr pen)
+{
+    // TODO
+}

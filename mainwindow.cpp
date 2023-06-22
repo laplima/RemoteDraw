@@ -32,12 +32,9 @@ MainWindow::MainWindow(ORBManager& om, const QString& name, QWidget *parent)
     cout << flush;
 
     ui->setupUi(this);
-
     ui->name->setText(name);
-
     for (const auto& [name,color] : colormap)
         ui->color_cb->addItem(name);
-//    ui->color_cb->setCurrentIndex(2);
     print("OK\n");
 
     // ORB init
@@ -47,9 +44,6 @@ MainWindow::MainWindow(ORBManager& om, const QString& name, QWidget *parent)
     ppoa = orb.create_child_poa("case", {POAPolicy::NO_IMPLICIT_ACTIVATION, POAPolicy::USER_ID});
     case_i = new PenCase_i{ppoa.in(), this};
     case_ref = orb.activate_object<PenCase>(*case_i);
-
-    // publish
-    //    orb.save_ior("/tmp/case.ior", cas.in());
     print("OK\n");
 
     print("Starting orb thread...");
@@ -70,6 +64,7 @@ MainWindow::MainWindow(ORBManager& om, const QString& name, QWidget *parent)
     connect(ui->color_cb, &QComboBox::currentIndexChanged, this, &MainWindow::change_color);
     connect(ui->exportior_bt, &QPushButton::clicked, this, &MainWindow::export_ior);
     connect(case_i, &PenCase_i::newpen, this, &MainWindow::new_pen);
+    connect(ui->connect_bt, &QPushButton::clicked, this, &MainWindow::import_ior);
     print("OK\n");
 }
 
@@ -105,6 +100,25 @@ void MainWindow::export_ior()
     auto filename = QFileDialog::getSaveFileName(this,tr("Save IOR File"),
                                                  dir, tr("IOR (*.ior)"));
     orb.save_ior(filename.toStdString(), case_ref.in());
+}
+
+void MainWindow::import_ior()
+{
+    QString path = "/tmp";
+    auto filename = QFileDialog::getOpenFileName(this, tr("Read IOR File"),
+                                                 path,tr("IOR (*.ior)"));
+    if (filename.isEmpty())
+        return;
+
+    try {
+        peer_ref = orb.string_to_object<PenCase>(("file://" + filename).toStdString());
+        peer_pen_ref = peer_ref->get_pen(ui->name->text().toStdString().c_str());
+        auto mycolor = ui->canvas->color(mydid);
+        peer_pen_ref->set_color(mycolor.red(), mycolor.green(), mycolor.blue());
+        ui->canvas->set_remote_pen(peer_pen_ref.in());
+    } catch(const CORBA::Exception& e) {
+        print(stderr,"CORBA error\n");
+    }
 }
 
 

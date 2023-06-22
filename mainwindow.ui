@@ -148,7 +148,7 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButton_3">
+        <widget class="QPushButton" name="connect_bt">
          <property name="text">
           <string>Connect...</string>
          </property>

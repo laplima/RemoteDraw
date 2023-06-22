@@ -27,13 +27,19 @@ private:
     unsigned int mydid;
 };
 
-class  PenCase_i : public QObject, public virtual POA_PenCase {
+class PenCase_i : public QObject, public virtual POA_PenCase {
     Q_OBJECT
 public:
     PenCase_i (PortableServer::POA_ptr ppoa, MainWindow* w, QObject* parent = nullptr);
     ~PenCase_i () override;
     ::Pen_ptr new_pen() override;
     ::Pen_ptr get_pen(const char* name) override;
+    void put_back(Pen_ptr pen) override;
+
+    ::CORBA::UShort canvas_width() override { return 800; }
+    ::CORBA::UShort canvas_height() override { return 608; }
+
+
 private:
     PortableServer::POA_var poa;
     MainWindow* win;

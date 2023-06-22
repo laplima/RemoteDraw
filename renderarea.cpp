@@ -72,17 +72,37 @@ void RenderArea::set_color(UId uid, const QColor& c)
 {
     if (validate(uid))
         dusers[uid].color = c;
+    try {
+        if (!CORBA::is_nil(pen_ref))
+            pen_ref->set_color(c.red(),c.green(),c.blue());
+    } catch (const CORBA::Exception& e) {
+        std::cerr << "Communication with peer RD failed.\n";
+        pen_ref = Pen::_nil();
+    }
 }
 
 void RenderArea::mousePressEvent(QMouseEvent* e)
 {
     move_to(default_user, e->pos());
-//    cout << e->pos().x() << "," << e->pos().y() << endl;
+    try {
+        if (!CORBA::is_nil(pen_ref))
+            pen_ref->move_to(e->pos().x(),e->pos().y());
+    } catch (const CORBA::Exception& e) {
+        std::cerr << "Communication with peer RD failed.\n";
+        pen_ref = Pen::_nil();
+    }
 }
 
 void RenderArea::mouseMoveEvent(QMouseEvent* e)
 {
     line_to(default_user, e->pos());
+    try {
+        if (!CORBA::is_nil(pen_ref))
+            pen_ref->line_to(e->pos().x(),e->pos().y());
+    } catch (const CORBA::Exception& e) {
+        std::cerr << "Communication with peer RD failed.\n";
+        pen_ref = Pen::_nil();
+    }
 }
 
 void RenderArea::paintEvent(QPaintEvent* e)
