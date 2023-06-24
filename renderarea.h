@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QPixmap>
+#include <QPainter>
 #include <vector>
 #include <PenCaseC.h>
 
@@ -17,6 +18,7 @@ class RenderArea : public QWidget {
     Q_OBJECT
 public:
     explicit RenderArea(QWidget *parent = nullptr);
+    virtual ~RenderArea();
     QSize minimumSizeHint() const override;
     QSize sizeHint() const override;
     void set_remote_pen(Pen_ptr pen) { pen_ref = pen; }
@@ -32,15 +34,18 @@ public:
     void mouseMoveEvent(QMouseEvent* e) override;
 signals:
 public slots:
+    void toggle_async(bool checked);
 protected:
     void paintEvent(QPaintEvent* e) override;
 private:
     QPixmap pixmap;
+    QPainter pm_painter;
     std::vector<DrawingInfo> dusers;    // drawing users
     bool validate(UId uid) const { return uid < dusers.size(); }
     void draw_line(UId uid, const QPoint& a, const QPoint& b);
     UId default_user;   // user drawing with the mouse
     Pen_ptr pen_ref = Pen::_nil();
+    bool async = false;
 };
 
 #endif

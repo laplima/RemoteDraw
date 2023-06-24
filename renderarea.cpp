@@ -1,11 +1,9 @@
 #include "renderarea.h"
-#include <QPainter>
 #include <QPainterPath>
 #include <QMouseEvent>
-#include <iostream>
-
-using std::cout;
-using std::endl;
+#include <fmt/format.h>
+#define SPDLOG_FMT_EXTERNAL
+#include <spdlog/spdlog.h>
 
 RenderArea::RenderArea(QWidget *parent)
     : QWidget{parent}, pixmap{800,608}
@@ -19,6 +17,14 @@ RenderArea::RenderArea(QWidget *parent)
     clear();
 
     default_user = new_user({Qt::black, {0,0}});
+
+    pm_painter.begin(&pixmap);
+    pm_painter.setRenderHint(QPainter::Antialiasing);
+}
+
+RenderArea::~RenderArea()
+{
+    pm_painter.end();
 }
 
 QSize RenderArea::sizeHint() const
@@ -47,10 +53,14 @@ void RenderArea::clear()
 void RenderArea::draw_line(UId uid, const QPoint& a, const QPoint& b)
 {
     // uid is supposed to be valid
-    QPainter p{&pixmap};
-    p.setRenderHint(QPainter::Antialiasing);
-    p.setPen({dusers[uid].color, 2.0});
-    p.drawLine(a,b);
+    // QPainter p{&pixmap};
+    // p.setRenderHint(QPainter::Antialiasing);
+    // p.setPen({dusers[uid].color, 2.0});
+    // p.drawLine(a,b);
+
+    pm_painter.setPen({dusers[uid].color, 2.0});
+    pm_painter.drawLine(a,b);
+
     this->update();
 }
 
@@ -76,7 +86,7 @@ void RenderArea::set_color(UId uid, const QColor& c)
         if (!CORBA::is_nil(pen_ref))
             pen_ref->set_color(c.red(),c.green(),c.blue());
     } catch (const CORBA::Exception& e) {
-        std::cerr << "Communication with peer RD failed.\n";
+        spdlog::error("Communication with peer RD failed.");
         pen_ref = Pen::_nil();
     }
 }
@@ -88,7 +98,7 @@ void RenderArea::mousePressEvent(QMouseEvent* e)
         if (!CORBA::is_nil(pen_ref))
             pen_ref->move_to(e->pos().x(),e->pos().y());
     } catch (const CORBA::Exception& e) {
-        std::cerr << "Communication with peer RD failed.\n";
+        spdlog::error("Communication with peer RD failed.");
         pen_ref = Pen::_nil();
     }
 }
@@ -97,10 +107,14 @@ void RenderArea::mouseMoveEvent(QMouseEvent* e)
 {
     line_to(default_user, e->pos());
     try {
-        if (!CORBA::is_nil(pen_ref))
-            pen_ref->line_to(e->pos().x(),e->pos().y());
+        if (!CORBA::is_nil(pen_ref)) {
+            if (async)
+                pen_ref->aline_to(e->pos().x(),e->pos().y());
+            else
+                pen_ref->line_to(e->pos().x(),e->pos().y());
+        }
     } catch (const CORBA::Exception& e) {
-        std::cerr << "Communication with peer RD failed.\n";
+        spdlog::error("Communication with peer RD failed.");
         pen_ref = Pen::_nil();
     }
 }
@@ -130,4 +144,9 @@ void RenderArea::paintEvent(QPaintEvent* e)
 //    painter.drawPath(path);
 
 //    painter.restore();
+}
+
+void RenderArea::toggle_async(bool checked)
+{
+    async = !async;
 }

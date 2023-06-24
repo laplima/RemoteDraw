@@ -27,5 +27,5 @@ interface PenCase {
 	
 	Pen new_pen();
 	Pen get_pen(in string name);
-	void put_back(in Pen p);
+	void put_back(in string name);
 };

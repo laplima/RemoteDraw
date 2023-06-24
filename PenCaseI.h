@@ -34,7 +34,7 @@ public:
     ~PenCase_i () override;
     ::Pen_ptr new_pen() override;
     ::Pen_ptr get_pen(const char* name) override;
-    void put_back(Pen_ptr pen) override;
+    void put_back(const char* name) override;
 
     ::CORBA::UShort canvas_width() override { return 800; }
     ::CORBA::UShort canvas_height() override { return 608; }

@@ -23,6 +23,8 @@ set(PROJECT_SOURCES
         PenCaseI.h PenCaseI.cpp
         orbworker.h orbworker.cpp)
 
+set(RESOURCE_FILES rdraw.qrc)
+
 # pkg-config
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(FMT REQUIRED fmt)
@@ -40,7 +42,7 @@ add_compile_options(-Wno-deprecated-declarations)
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(RemoteDraw
         MANUAL_FINALIZATION
-        ${PROJECT_SOURCES}
+		${PROJECT_SOURCES} ${RESOURCE_FILES}
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET RemoteDraw APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

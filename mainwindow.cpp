@@ -7,14 +7,15 @@
 #include <QRandomGenerator>
 #include <iostream>
 #include <algorithm>
-#include <fmt/core.h>
-#include <fmt/ostream.h>
+#include <fmt/format.h>
 #include <QFileDialog>
+#include <QFile>
+#define SPDLOG_FMT_EXTERNAL
+#include <spdlog/spdlog.h>
 
-using std::cout;
-using std::endl;
 using std::flush;
 using fmt::print;
+using spdlog::info;
 using namespace colibry;
 
 std::vector<std::pair<QString,QColor>> MainWindow::colormap = {
@@ -28,50 +29,45 @@ std::vector<std::pair<QString,QColor>> MainWindow::colormap = {
 MainWindow::MainWindow(ORBManager& om, const QString& name, QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow), orb{om}
 {
-    print("Seeting up UI...");
-    cout << flush;
+    info("Seeting up UI");
 
     ui->setupUi(this);
     ui->name->setText(name);
     for (const auto& [name,color] : colormap)
         ui->color_cb->addItem(name);
-    print("OK\n");
 
     // ORB init
-    print("Initializing ORB...");
-    cout << flush;
+    info("Initializing ORB");
     orb.activate_rootpoa();
     ppoa = orb.create_child_poa("case", {POAPolicy::NO_IMPLICIT_ACTIVATION, POAPolicy::USER_ID});
     case_i = new PenCase_i{ppoa.in(), this};
     case_ref = orb.activate_object<PenCase>(*case_i);
-    print("OK\n");
 
-    print("Starting orb thread...");
-    cout << flush;
-
+    info("Starting orb thread");
     // start ORB thread
     ORBWorker* ow = new ORBWorker{om, this};
     connect(ow, &ORBWorker::orbfinished, ow, &QObject::deleteLater);
     ow->start(); // <- BLOCKS MAIN THREAD...
 
-    print("OK\n");
-
     // connections
-    print("Making connections...");
-    cout << flush;
+    info("Making connections");
     connect(ui->quit_bt, &QPushButton::clicked, this, &MainWindow::quit);
     connect(ui->clear_bt, &QPushButton::clicked, this, &MainWindow::clear);
     connect(ui->color_cb, &QComboBox::currentIndexChanged, this, &MainWindow::change_color);
     connect(ui->exportior_bt, &QPushButton::clicked, this, &MainWindow::export_ior);
     connect(case_i, &PenCase_i::newpen, this, &MainWindow::new_pen);
     connect(ui->connect_bt, &QPushButton::clicked, this, &MainWindow::import_ior);
-    print("OK\n");
+    connect(ui->async_rb, &QRadioButton::toggled, ui->canvas, &RenderArea::toggle_async);
 }
 
 MainWindow::~MainWindow()
 {
     orb.shutdown();
     delete ui;
+
+    // delete ior file
+    if (!saved_ior_file.empty())
+        QFile::remove(saved_ior_file.c_str());
 }
 
 UId MainWindow::new_user()
@@ -99,14 +95,15 @@ void MainWindow::export_ior()
     QString dir = "/tmp/" + ui->name->text() + ".ior";
     auto filename = QFileDialog::getSaveFileName(this,tr("Save IOR File"),
                                                  dir, tr("IOR (*.ior)"));
-    orb.save_ior(filename.toStdString(), case_ref.in());
+    saved_ior_file = filename.toStdString();
+    orb.save_ior(saved_ior_file, case_ref.in());
 }
 
 void MainWindow::import_ior()
 {
-    QString path = "/tmp";
+    QString dir = "/tmp";
     auto filename = QFileDialog::getOpenFileName(this, tr("Read IOR File"),
-                                                 path,tr("IOR (*.ior)"));
+                                                 dir,tr("IOR (*.ior)"));
     if (filename.isEmpty())
         return;
 
@@ -116,18 +113,20 @@ void MainWindow::import_ior()
         auto mycolor = ui->canvas->color(mydid);
         peer_pen_ref->set_color(mycolor.red(), mycolor.green(), mycolor.blue());
         ui->canvas->set_remote_pen(peer_pen_ref.in());
+
+        QPixmap mypix{":/rdi/rdi_connected.png"};
+        ui->cn_lb->setPixmap(mypix);
     } catch(const CORBA::Exception& e) {
-        print(stderr,"CORBA error\n");
+        spdlog::error("CORBA error");
     }
 }
-
 
 void MainWindow::quit()
 {
     close();
 }
 
-// CORBA signals
+// CORBA signals ---------------------------------------------------------------------
 
 void MainWindow::new_pen(Pen_i* p)
 {

@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>rdi/rdi_connected.png</file>
+        <file>rdi/rdi_disconnected.png</file>
+    </qresource>
+</RCC>

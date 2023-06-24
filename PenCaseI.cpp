@@ -3,6 +3,8 @@
 #include <QPoint>
 #include <string>
 #include "mainwindow.h"
+#define SPDLOG_FMT_EXTERNAL
+#include <spdlog/spdlog.h>
 
 using namespace std;
 
@@ -82,7 +84,13 @@ PenCase_i::~PenCase_i ()
 	return Pen::_duplicate(Pen::_narrow(ref));
 }
 
-void PenCase_i::put_back(Pen_ptr pen)
+void PenCase_i::put_back(const char* name)
 {
-    // TODO
+    try {
+        PortableServer::ObjectId_var pen_id = PortableServer::string_to_ObjectId(name);
+        // CORBA::Object_ptr ref = poa->id_to_reference(pen_id.in());
+        poa->deactivate_object(pen_id.in());
+    } catch (const PortableServer::POA::ObjectNotActive&) {
+        spdlog::error("No active object with ID \"{}\"", name);
+    }
 }

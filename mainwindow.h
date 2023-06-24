@@ -5,6 +5,7 @@
 #include <vector>
 #include <memory>
 #include <colibry/ORBManager.h>
+#include <string>
 #include "renderarea.h"
 #include "PenCaseI.h"
 
@@ -43,6 +44,7 @@ private:
     const UId mydid = 0;     // default drawing user id
     static std::vector<std::pair<QString,QColor>> colormap;
     size_t nusers = 0;      // connected users (i.e., pens)
+    std::string saved_ior_file;
 };
 
 #endif // MAINWINDOW_H
