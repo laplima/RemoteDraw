@@ -26,16 +26,16 @@ set(PROJECT_SOURCES
 set(RESOURCE_FILES rdraw.qrc)
 
 # pkg-config
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(FMT REQUIRED fmt)
+# find_package(PkgConfig REQUIRED)
+find_package(fmt REQUIRED)
+find_package(spdlog REQUIRED)
 
 include_directories(
     "${PROJECT_SOURCE_DIR}"
     "$ENV{ACE_ROOT}"
     "$ENV{TAO_ROOT}"
     "$ENV{TAO_ROOT}/orbsvcs"
-    "$ENV{COLIBRY}/include"
-    ${FMT_INCLUDE_DIRS})
+	"$ENV{COLIBRY}/include")
 
 add_compile_options(-Wno-deprecated-declarations)
 
@@ -74,6 +74,7 @@ set(libs
     colibry_static)
 
 # Platform-dependent additional libraries
+
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
     set(libs ${libs} )
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
@@ -88,8 +89,7 @@ foreach(lib_ ${libs})
     set(mylibs ${mylibs} ${alib_})
 endforeach(lib_)
 
-target_link_libraries(RemoteDraw PRIVATE Qt${QT_VERSION_MAJOR}::Widgets
-  ${FMT_LIBRARIES} ${FMT_LDFLAGS} ${mylibs})
+target_link_libraries(RemoteDraw PRIVATE Qt${QT_VERSION_MAJOR}::Widgets fmt::fmt ${mylibs})
 
 set_target_properties(RemoteDraw PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER my.example.com

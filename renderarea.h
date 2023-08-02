@@ -25,6 +25,7 @@ public:
     void clear();
 
     UId new_user(const DrawingInfo& di);    // creates new user with di and returns its drawing id
+    void rm_user(UId uid);
     void move_to(UId uid, const QPoint& a);
     void line_to(UId uid, const QPoint& a);
     void set_color(UId uid, const QColor& c);

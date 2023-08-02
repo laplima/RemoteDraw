@@ -20,6 +20,7 @@ public:
     MainWindow(colibry::ORBManager& om, const QString& name, QWidget *parent = nullptr);
     ~MainWindow();
     UId new_user();
+    void remove_user(UId user);
 public slots:
     // interface
     void clear();
@@ -27,6 +28,8 @@ public slots:
     void change_color();
     void export_ior();
     void import_ior();
+    void send_changed(bool checked);
+    void receive_changed(bool checked);
     // corba
     void new_pen(Pen_i* pen);       // called by PenCase to connect pen signals
     void set_color(unsigned int uid, const QColor& c);
@@ -36,7 +39,7 @@ public slots:
 private:
     Ui::MainWindow *ui;
     colibry::ORBManager& orb;
-    PortableServer::POA_var ppoa;
+    colibry::MPOA ppoa;
     PenCase_i* case_i;
     PenCase_var case_ref = PenCase::_nil();
     PenCase_var peer_ref = PenCase::_nil();

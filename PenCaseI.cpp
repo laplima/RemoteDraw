@@ -15,25 +15,31 @@ Pen_i::Pen_i (unsigned int id, QObject* parent)
 
 void Pen_i::set_color(::CORBA::Octet r, ::CORBA::Octet g, ::CORBA::Octet b)
 {
-    emit color(mydid, {r,g,b});
+    if (enabled)
+        emit color(mydid, {r,g,b});
 }
 
 void Pen_i::move_to(::CORBA::Short x, ::CORBA::Short y)
 {
-    emit moveto(mydid, {x,y});
+    if (enabled)
+        emit moveto(mydid, {x,y});
 }
 
 void Pen_i::line_to (::CORBA::Short x, ::CORBA::Short y)
 {
-    emit lineto(mydid, {x,y});
+    if (enabled)
+        emit lineto(mydid, {x,y});
 }
 
 void Pen_i::aline_to (::CORBA::Short x, ::CORBA::Short y)
 {
-    emit alineto(mydid, {x,y});
+    if (enabled)
+        emit alineto(mydid, {x,y});
 }
 
+// -------------------------------------------------------------------------------------------
 // PenCase
+// -------------------------------------------------------------------------------------------
 
 PenCase_i::PenCase_i (PortableServer::POA_ptr ppoa, MainWindow* w, QObject* p)
     : QObject{p}, poa{PortableServer::POA::_duplicate(ppoa)}, win{w}
@@ -88,7 +94,8 @@ void PenCase_i::put_back(const char* name)
 {
     try {
         PortableServer::ObjectId_var pen_id = PortableServer::string_to_ObjectId(name);
-        // CORBA::Object_ptr ref = poa->id_to_reference(pen_id.in());
+        // auto servant = reinterpret_cast<Pen_i*>(poa->id_to_servant(pen_id.in()));
+        // win->remove_user(servant->id());
         poa->deactivate_object(pen_id.in());
     } catch (const PortableServer::POA::ObjectNotActive&) {
         spdlog::error("No active object with ID \"{}\"", name);

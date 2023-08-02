@@ -18,6 +18,7 @@ public:
     void aline_to (::CORBA::Short x, ::CORBA::Short y) override;
 
     [[nodiscard]] unsigned int id() const { return mydid; }
+    void enable(bool e=true) { enabled = e; }
 signals:
     void color(unsigned int did, const QColor& color);
     void moveto(unsigned int did, const QPoint& p);
@@ -25,6 +26,7 @@ signals:
     void alineto(unsigned int did, const QPoint& p);
 private:
     unsigned int mydid;
+    bool enabled = true;
 };
 
 class PenCase_i : public QObject, public virtual POA_PenCase {

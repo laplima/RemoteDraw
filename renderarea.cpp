@@ -43,6 +43,11 @@ UId RenderArea::new_user(const DrawingInfo& di)
     return dusers.size()-1;
 }
 
+void RenderArea::rm_user(UId uid)
+{
+    dusers.erase(dusers.begin() + uid);
+}
+
 void RenderArea::clear()
 {
     pixmap.fill(QColorConstants::White);
@@ -82,9 +87,10 @@ void RenderArea::set_color(UId uid, const QColor& c)
 {
     if (validate(uid))
         dusers[uid].color = c;
+    if (CORBA::is_nil(pen_ref))
+        return;
     try {
-        if (!CORBA::is_nil(pen_ref))
-            pen_ref->set_color(c.red(),c.green(),c.blue());
+        pen_ref->set_color(c.red(),c.green(),c.blue());
     } catch (const CORBA::Exception& e) {
         spdlog::error("Communication with peer RD failed.");
         pen_ref = Pen::_nil();
@@ -94,9 +100,10 @@ void RenderArea::set_color(UId uid, const QColor& c)
 void RenderArea::mousePressEvent(QMouseEvent* e)
 {
     move_to(default_user, e->pos());
+    if (CORBA::is_nil(pen_ref))
+        return;
     try {
-        if (!CORBA::is_nil(pen_ref))
-            pen_ref->move_to(e->pos().x(),e->pos().y());
+        pen_ref->move_to(e->pos().x(),e->pos().y());
     } catch (const CORBA::Exception& e) {
         spdlog::error("Communication with peer RD failed.");
         pen_ref = Pen::_nil();
@@ -106,13 +113,13 @@ void RenderArea::mousePressEvent(QMouseEvent* e)
 void RenderArea::mouseMoveEvent(QMouseEvent* e)
 {
     line_to(default_user, e->pos());
+    if (CORBA::is_nil(pen_ref))
+        return;
     try {
-        if (!CORBA::is_nil(pen_ref)) {
-            if (async)
-                pen_ref->aline_to(e->pos().x(),e->pos().y());
-            else
-                pen_ref->line_to(e->pos().x(),e->pos().y());
-        }
+        if (async)
+            pen_ref->aline_to(e->pos().x(),e->pos().y());
+        else
+            pen_ref->line_to(e->pos().x(),e->pos().y());
     } catch (const CORBA::Exception& e) {
         spdlog::error("Communication with peer RD failed.");
         pen_ref = Pen::_nil();

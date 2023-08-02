@@ -2,5 +2,10 @@
     <qresource prefix="/">
         <file>rdi/rdi_connected.png</file>
         <file>rdi/rdi_disconnected.png</file>
+        <file>rdi/rdi_sconnected.png</file>
+        <file>rdi/rdi_sdisconnected.png</file>
+        <file>rdi/rdi_title.png</file>
+        <file>rdi/traditional-01.png</file>
+        <file>rdi/traditional-02.png</file>
     </qresource>
 </RCC>

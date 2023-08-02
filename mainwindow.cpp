@@ -39,8 +39,8 @@ MainWindow::MainWindow(ORBManager& om, const QString& name, QWidget *parent)
     // ORB init
     info("Initializing ORB");
     orb.activate_rootpoa();
-    ppoa = orb.create_child_poa("case", {POAPolicy::NO_IMPLICIT_ACTIVATION, POAPolicy::USER_ID});
-    case_i = new PenCase_i{ppoa.in(), this};
+    ppoa = orb.rootpoa().create_child_poa("case", {POAPolicy::NO_IMPLICIT_ACTIVATION, POAPolicy::USER_ID});
+    case_i = new PenCase_i{ppoa.poa(), this};
     case_ref = orb.activate_object<PenCase>(*case_i);
 
     info("Starting orb thread");
@@ -58,10 +58,16 @@ MainWindow::MainWindow(ORBManager& om, const QString& name, QWidget *parent)
     connect(case_i, &PenCase_i::newpen, this, &MainWindow::new_pen);
     connect(ui->connect_bt, &QPushButton::clicked, this, &MainWindow::import_ior);
     connect(ui->async_rb, &QRadioButton::toggled, ui->canvas, &RenderArea::toggle_async);
+    connect(ui->send_check, &QCheckBox::toggled, this, &MainWindow::send_changed);
+    connect(ui->receive_check, &QCheckBox::toggled, this, &MainWindow::receive_changed);
 }
 
 MainWindow::~MainWindow()
 {
+    // TODO: not working -- application crash
+    // put pen back in the case
+    // peer_ref->put_back(ui->name->text().toStdString().c_str());
+
     orb.shutdown();
     delete ui;
 
@@ -72,9 +78,16 @@ MainWindow::~MainWindow()
 
 UId MainWindow::new_user()
 {
-    ++nusers;
-    ui->nusers->setText(QString("Connected users: ")+QString::number(nusers));
+    ui->nusers->setText(QString("Connected users: ")+QString::number(++nusers));
+    if (!ui->receive_check->isEnabled())
+        ui->receive_check->setEnabled(true);
     return ui->canvas->new_user({Qt::black, {0,0}});
+}
+
+void MainWindow::remove_user(UId user)
+{
+    ui->nusers->setText(QString("Connected users: ")+QString::number(--nusers));
+    ui->canvas->rm_user(user);
 }
 
 void MainWindow::change_color()
@@ -114,11 +127,22 @@ void MainWindow::import_ior()
         peer_pen_ref->set_color(mycolor.red(), mycolor.green(), mycolor.blue());
         ui->canvas->set_remote_pen(peer_pen_ref.in());
 
-        QPixmap mypix{":/rdi/rdi_connected.png"};
+        QPixmap mypix{":/rdi/traditional-02.png"};
         ui->cn_lb->setPixmap(mypix);
+        ui->send_check->setEnabled(true);
     } catch(const CORBA::Exception& e) {
         spdlog::error("CORBA error");
     }
+}
+
+void MainWindow::send_changed(bool checked)
+{
+    ui->canvas->set_remote_pen(checked ? peer_pen_ref.in() : Pen::_nil());
+}
+
+void MainWindow::receive_changed(bool checked)
+{
+    // not needed...
 }
 
 void MainWindow::quit()
@@ -135,20 +159,24 @@ void MainWindow::new_pen(Pen_i* p)
 
 void MainWindow::set_color(unsigned int uid, const QColor& c)
 {
-    ui->canvas->set_color(uid,c);
+    if (ui->receive_check->isChecked())
+        ui->canvas->set_color(uid,c);
 }
 
 void MainWindow::move_to(UId uid, const QPoint& p)
 {
-    ui->canvas->move_to(uid, p);
+    if (ui->receive_check->isChecked())
+        ui->canvas->move_to(uid, p);
 }
 
 void MainWindow::line_to(UId uid, const QPoint& p)
 {
-    ui->canvas->line_to(uid, p);
+    if (ui->receive_check->isChecked())
+        ui->canvas->line_to(uid, p);
 }
 
 void MainWindow::aline_to(UId uid, const QPoint& p)
 {
-    ui->canvas->line_to(uid, p);
+    if (ui->receive_check->isChecked())
+        ui->canvas->line_to(uid, p);
 }
