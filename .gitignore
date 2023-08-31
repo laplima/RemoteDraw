@@ -33,7 +33,7 @@
 
 .DS_Store
 
-CMakeLists.txt.user.*
+CMakeLists.txt.user*
 PenCaseC.*
 PenCaseS.*
 
