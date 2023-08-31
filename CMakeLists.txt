@@ -10,7 +10,7 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Core)
 
 set(PROJECT_SOURCES
         main.cpp
@@ -24,6 +24,7 @@ set(PROJECT_SOURCES
         orbworker.h orbworker.cpp)
 
 set(RESOURCE_FILES rdraw.qrc)
+qt_add_resources(PROJECT_SOURCES ${RESOURCE_FILES})
 
 # pkg-config
 # find_package(PkgConfig REQUIRED)
