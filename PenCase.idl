@@ -11,6 +11,7 @@
 //
 
 interface Pen {
+	readonly attribute string name; // nome da caneta
 	void set_color(in octet r, in octet g, in octet b);
 	void move_to(in short x, in short y);
 	void line_to(in short x, in short y);
@@ -25,7 +26,7 @@ interface PenCase {
 	unsigned short canvas_width();
 	unsigned short canvas_height();
 	
-	Pen new_pen();
+	Pen new_pen();					// atribui nome para a nova caneta
 	Pen get_pen(in string name);
 	void put_back(in string name);
 };

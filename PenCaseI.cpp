@@ -1,16 +1,20 @@
 #include "PenCaseI.h"
 #include <QColor>
 #include <QPoint>
-#include <string>
 #include "mainwindow.h"
 #define SPDLOG_FMT_EXTERNAL
 #include <spdlog/spdlog.h>
 
 using namespace std;
 
-Pen_i::Pen_i (unsigned int id, QObject* parent)
-    : QObject{parent}, mydid{id}
+Pen_i::Pen_i (string name, unsigned int id, QObject* parent)
+    : QObject{parent}, name_{std::move(name)}, mydid{id}
 {
+}
+
+char* Pen_i::name()
+{
+    return CORBA::string_dup(name_.c_str());
 }
 
 void Pen_i::set_color(::CORBA::Octet r, ::CORBA::Octet g, ::CORBA::Octet b)
@@ -79,7 +83,7 @@ PenCase_i::~PenCase_i ()
 		ref = poa->id_to_reference(pen_id.in());
 	} catch (const PortableServer::POA::ObjectNotActive&) {
         // create new
-        auto* c = new Pen_i{win->new_user()};
+        auto* c = new Pen_i{name, win->new_user()};
 	    connect(c, &Pen_i::color, win, &MainWindow::set_color);
 	    connect(c, &Pen_i::moveto, win, &MainWindow::move_to);
 	    connect(c, &Pen_i::lineto, win, &MainWindow::line_to);

@@ -3,15 +3,17 @@
 
 #include "PenCaseS.h"
 #include <QObject>
+#include <string>
 
 class MainWindow;
 
 class Pen_i : public QObject, public virtual POA_Pen {
     Q_OBJECT
 public:
-    Pen_i (unsigned int id, QObject* parent = nullptr);
+    Pen_i (std::string name, unsigned int id, QObject* parent = nullptr);
     ~Pen_i () override = default;
 
+    char* name() override;
     void set_color(::CORBA::Octet r, ::CORBA::Octet g, ::CORBA::Octet b) override;
     void move_to(::CORBA::Short x, ::CORBA::Short y) override;
     void line_to(::CORBA::Short x, ::CORBA::Short y) override;
@@ -25,6 +27,7 @@ signals:
     void lineto(unsigned int did, const QPoint& p);
     void alineto(unsigned int did, const QPoint& p);
 private:
+    std::string name_;  // pen name
     unsigned int mydid;
     bool enabled = true;
 };
